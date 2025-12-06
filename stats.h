@@ -261,52 +261,6 @@ static inline void sched_info_depart(struct rq *rq, struct task_struct *t)
 {
 	unsigned long long delta = rq_clock(rq) - t->sched_info.last_arrival;
 
-        /*
-         * Log scheduling information:
-         *
-         *  - t->pid
-         *      * pid_t pid; is a member of struct task_struct
-         *        (defined in include/linux/sched.h).
-         *
-         *  - task_nice(t)
-         *      * Static inline helper in include/linux/sched.h.
-         *      * return the nice value of a given task.
-         *
-         *  - t->se.vruntime, t->se.deadline
-         *      * struct task_struct has a member `struct sched_entity se;`.
-         *      * struct sched_entity (defined in kernel/sched/sched.h) contains:
-         *          u64 vruntime;   // CFS/EEVDF virtual runtime
-         *          u64 deadline;   // EEVDF virtual deadline
-         *
-         *  - delta
-         *      * CPU burst time computed above.
-         */
-
-        /*
-         * Only log user processes:
-         *  - t->mm != NULL :
-         *        normal user processes have their own mm (address space),
-         *        while pure kernel threads are created with t->mm = NULL
-         *        (see get_task_mm() in kernel/fork.c).
-         *  - !(t->flags & PF_KTHREAD) :
-         *        exclude tasks marked as PF_KTHREAD (kernel threads),
-         *        even if they temporarily borrow a user mm.
-	 *
-	 *  - strcmp(t->comm, "cpu") == 0 :
-	 *        t->comm stores the executable name
-	 *        Limits logging strictly to user test processes named "cpu"
-	 *
-         */
-
-	if (t->mm && !(t->flags & PF_KTHREAD) && strcmp(t->comm, "cpu") == 0){
-		printk(KERN_INFO "SCHED_LOG: pid=%d, nice=%d, vruntime=%llu, deadline=%llu, burst_ns=%llu\n",
-			t->pid,
-			task_nice(t),
-			t->se.vruntime,
-			t->se.deadline,
-			delta);
-	}
-
 	rq_sched_info_depart(rq, delta);
 
 	if (task_is_running(t))
